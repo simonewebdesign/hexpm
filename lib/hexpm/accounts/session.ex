@@ -15,6 +15,10 @@ defmodule Hexpm.Accounts.Session do
     change(session, data: data)
   end
 
+  def by_id(query, id) do
+    from(s in query, where: [id: ^id])
+  end
+
   def by_user(query, user) do
     from(s in query, where: fragment("?->>'username'", s.data) == ^user.username)
   end

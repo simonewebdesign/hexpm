@@ -1,6 +1,4 @@
 defmodule Hexpm.Web.Session do
-  import Ecto.Query
-
   alias Hexpm.Accounts.Session
   alias Hexpm.Repo
 
@@ -27,7 +25,7 @@ defmodule Hexpm.Web.Session do
   end
 
   def put(_conn, {id, token}, data, _opts) do
-    Repo.update_all(from(s in Session, where: [id: ^id]), [set: [
+    Repo.update_all(Session.by_id(Session, id), [set: [
       data: data,
       updated_at: NaiveDateTime.utc_now()
     ]])
@@ -35,7 +33,7 @@ defmodule Hexpm.Web.Session do
   end
 
   def delete(_conn, {id, _token}, _opts) do
-    Repo.delete_all(from(s in Session, where: [id: ^id]))
+    Repo.delete_all(Session.by_id(Session, id))
     :ok
   end
 
