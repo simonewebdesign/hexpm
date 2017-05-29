@@ -18,6 +18,14 @@ defmodule Hexpm.Web.LoginControllerTest do
     assert last_session().data["username"] == c.user.username
   end
 
+  test "log in keeps you logged in", c do
+    conn = post(build_conn(), "login", %{username: c.user.username, password: c.password})
+    assert redirected_to(conn) == "/users/#{c.user.username}"
+
+    conn = conn |> recycle() |> get("/")
+    assert get_session(conn, "username") == c.user.username
+  end
+
   test "log in with wrong password", c do
     conn = post(build_conn(), "login", %{username: c.user.username, password: "WRONG"})
     assert response(conn, 400) =~ "Log in"
