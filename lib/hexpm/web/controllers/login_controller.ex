@@ -19,6 +19,7 @@ defmodule Hexpm.Web.LoginController do
         path = conn.params["return"] || user_path(conn, :show, user)
 
         conn
+        |> configure_session(renew: true)
         |> put_session("username", user.username)
         |> redirect(to: path)
       {:error, reason} ->
