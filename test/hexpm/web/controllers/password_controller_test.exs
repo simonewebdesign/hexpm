@@ -33,14 +33,19 @@ defmodule Hexpm.Web.PasswordControllerTest do
       username = c.user.username
       assert {:ok, {%User{username: ^username}, _, _}} = Auth.password_auth(username, "hunter42")
       Repo.insert!(Session.build(%{"username" => username}))
+      Repo.insert!(Session.build(%{"username" => username}))
 
       # initiate password reset (usually done via api)
       user = User.init_password_reset(c.user) |> Repo.update!
 
       # chose new password (using token) to `abcd1234`
-      conn = post(build_conn(), "password/new", %{"user" => %{"username" => user.username, "key" => user.reset_key, "password" => "abcd1234"}})
+      conn =
+        build_conn()
+        |> test_login(user)
+        |> post("password/new", %{"user" => %{"username" => user.username, "key" => user.reset_key, "password" => "abcd1234"}})
       assert redirected_to(conn) == "/"
       assert get_flash(conn, :info) =~ "password has been changed"
+      refute get_session(conn, "username")
 
       # check new password will work
       assert {:ok, {%User{username: ^username}, _, _}} = Auth.password_auth(username, "abcd1234")

@@ -1,8 +1,11 @@
 defmodule Hexpm.Web.Session do
+  import Ecto.Query
+
   alias Hexpm.Accounts.Session
   alias Hexpm.Repo
 
   @behaviour Plug.Session.Store
+  @fake_token <<0::96*8>>
 
   def init(_opts) do
     :ok
@@ -24,24 +27,32 @@ defmodule Hexpm.Web.Session do
   end
 
   def put(_conn, id, data, _opts) do
-    session =
-      if session = Repo.get(Session, id) do
-        Repo.update!(Session.update(session, data))
-      else
-        Repo.insert!(Session.build(data))
-      end
-    build_cookie(session)
+    result = Repo.update_all(
+      from(s in Session, where: [id: ^id]),
+      [set: [
+        data: data,
+        updated_at: NaiveDateTime.utc_now()
+      ]],
+      returning: true)
+
+    case result do
+      {1, [session]} ->
+        build_cookie(session)
+      {0, []} ->
+        build_cookie(0, @fake_token)
+    end
   end
 
   def delete(_conn, id, _opts) do
-    if session = Repo.get(Session, id) do
-      Repo.delete!(session)
-    end
-    :ok
+    Repo.delete_all(from(s in Session, where: [id: ^id]))
   end
 
   defp build_cookie(session) do
-    "#{session.id}++#{Base.url_encode64(session.token)}"
+    build_cookie(session.id, session.token)
+  end
+
+  defp build_cookie(id, token) do
+    "#{id}++#{Base.url_encode64(token)}"
   end
 
   defp parse_cookie(sid) do

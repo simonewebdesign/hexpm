@@ -43,7 +43,6 @@ defmodule Hexpm.Web.LoginControllerTest do
     conn =
       conn
       |> recycle()
-      # |> test_login(c.user)
       |> post("logout")
 
     assert redirected_to(conn) == "/"

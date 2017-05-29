@@ -27,7 +27,6 @@ defmodule Hexpm.Web.AuthHelpers do
     end
   end
 
-
   defp authorize(conn, opts) do
     only_basic = Keyword.get(opts, :only_basic, false)
     allow_unconfirmed = Keyword.get(opts, :allow_unconfirmed, false)
@@ -84,7 +83,6 @@ defmodule Hexpm.Web.AuthHelpers do
     conn
     |> render_error(403, message: reason)
   end
-
 
   def package_owner?(_, nil),
     do: false
