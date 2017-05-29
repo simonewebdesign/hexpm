@@ -1,6 +1,5 @@
 defmodule Hexpm.Web.LoginControllerTest do
-  use Hexpm.ConnCase, async: true
-  alias Hexpm.Accounts.Session
+  use Hexpm.ConnCase
 
   setup do
     %{user: create_user("eric", "eric@mail.com", "hunter42"), password: "hunter42"}
@@ -16,7 +15,7 @@ defmodule Hexpm.Web.LoginControllerTest do
     assert redirected_to(conn) == "/users/#{c.user.username}"
 
     assert get_session(conn, "username") == c.user.username
-    assert Repo.one!(Session).data["username"] == c.user.username
+    assert last_session().data["username"] == c.user.username
   end
 
   test "log in with wrong password", c do
@@ -24,7 +23,7 @@ defmodule Hexpm.Web.LoginControllerTest do
     assert response(conn, 400) =~ "Log in"
     assert get_flash(conn, "error") == "Invalid username, email or password."
     refute get_session(conn, "username")
-    refute Repo.one!(Session).data["username"]
+    refute last_session().data["username"]
   end
 
   test "log in with unconfirmed email", c do
@@ -34,7 +33,7 @@ defmodule Hexpm.Web.LoginControllerTest do
     assert response(conn, 400) =~ "Log in"
     assert get_flash(conn, "error") == "Email has not been verified yet."
     refute get_session(conn, "username")
-    refute Repo.one!(Session).data["username"]
+    refute last_session().data["username"]
   end
 
   test "log out", c do
@@ -49,6 +48,6 @@ defmodule Hexpm.Web.LoginControllerTest do
 
     assert redirected_to(conn) == "/"
     refute get_session(conn, "username")
-    refute Repo.one!(Session).data["username"]
+    refute last_session().data["username"]
   end
 end

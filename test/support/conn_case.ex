@@ -48,6 +48,12 @@ defmodule Hexpm.ConnCase do
     Plug.Test.init_test_session(conn, %{"username" => user.username})
   end
 
+  def last_session() do
+    import Ecto.Query
+    from(s in Hexpm.Accounts.Session, order_by: [desc: s.id], limit: 1)
+    |> Hexpm.Repo.one
+  end
+
   def json_post(conn, path, params) do
     conn
     |> Plug.Conn.put_req_header("content-type", "application/json")

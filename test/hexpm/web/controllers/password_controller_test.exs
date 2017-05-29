@@ -1,6 +1,7 @@
 defmodule Hexpm.Web.PasswordControllerTest do
-  use Hexpm.ConnCase, async: true
+  use Hexpm.ConnCase
   alias Hexpm.Accounts.{Auth, Session, User}
+  alias Hexpm.Repo
 
   setup do
     user = insert(:user, password: Auth.gen_password("hunter42"))
@@ -31,10 +32,10 @@ defmodule Hexpm.Web.PasswordControllerTest do
     test "submit new password", c do
       username = c.user.username
       assert {:ok, {%User{username: ^username}, _, _}} = Auth.password_auth(username, "hunter42")
-      Hexpm.Repo.insert!(%Session{data: %{"username" => username}})
+      Repo.insert!(Session.build(%{"username" => username}))
 
       # initiate password reset (usually done via api)
-      user = User.init_password_reset(c.user) |> Hexpm.Repo.update!
+      user = User.init_password_reset(c.user) |> Repo.update!
 
       # chose new password (using token) to `abcd1234`
       conn = post(build_conn(), "password/new", %{"user" => %{"username" => user.username, "key" => user.reset_key, "password" => "abcd1234"}})
@@ -43,7 +44,7 @@ defmodule Hexpm.Web.PasswordControllerTest do
 
       # check new password will work
       assert {:ok, {%User{username: ^username}, _, _}} = Auth.password_auth(username, "abcd1234")
-      refute Hexpm.Repo.one!(Session).data["username"]
+      refute last_session().data["username"]
     end
   end
 end

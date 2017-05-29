@@ -2,8 +2,8 @@ defmodule Hexpm.Repo.Migrations.AddSessionsTable do
   use Ecto.Migration
 
   def up do
-    create table(:sessions, primary_key: false) do
-      add :id, :binary_id, primary_key: true
+    create table(:sessions) do
+      add :token, :binary, null: false
       add :data, :jsonb, null: false
 
       timestamps()
