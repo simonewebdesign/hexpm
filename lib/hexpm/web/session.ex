@@ -5,17 +5,16 @@ defmodule Hexpm.Web.Session do
   alias Hexpm.Repo
 
   @behaviour Plug.Session.Store
-  @fake_token <<0::96*8>>
 
   def init(_opts) do
     :ok
   end
 
   def get(_conn, cookie, _opts) do
-    {id, token} = parse_cookie(cookie)
+    {id, token} = sid = parse_cookie(cookie)
     session = Repo.get(Session, id)
     if session && Plug.Crypto.secure_compare(token, session.token) do
-      {id, session.data}
+      {sid, session.data}
     else
       {nil, %{}}
     end
@@ -26,25 +25,17 @@ defmodule Hexpm.Web.Session do
     build_cookie(session)
   end
 
-  def put(_conn, id, data, _opts) do
-    result = Repo.update_all(
-      from(s in Session, where: [id: ^id]),
-      [set: [
-        data: data,
-        updated_at: NaiveDateTime.utc_now()
-      ]],
-      returning: true)
-
-    case result do
-      {1, [session]} ->
-        build_cookie(session)
-      {0, []} ->
-        build_cookie(0, @fake_token)
-    end
+  def put(_conn, {id, token}, data, _opts) do
+    Repo.update_all(from(s in Session, where: [id: ^id]), [set: [
+      data: data,
+      updated_at: NaiveDateTime.utc_now()
+    ]])
+    build_cookie(id, token)
   end
 
-  def delete(_conn, id, _opts) do
+  def delete(_conn, {id, _token}, _opts) do
     Repo.delete_all(from(s in Session, where: [id: ^id]))
+    :ok
   end
 
   defp build_cookie(session) do
